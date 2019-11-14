@@ -602,6 +602,20 @@ void WebContents::OnCreateWindow(
     Emit("new-window", target_url, frame_name, disposition, features);
 }
 
+bool IsWebContentsCreationOverridden(
+    content::SiteInstance* source_site_instance,
+    content::mojom::WindowContainerType window_container_type,
+    const GURL& opener_url,
+    const std::string& frame_name,
+    const GURL& target_url) {
+  if (Emit("-will-add-new-contents", target_url, frame_name) {
+    // If we've prevented default, tell Chrome we're overriding and then do
+    // nothing.
+    return true;
+  }
+  return false;
+}
+
 void WebContents::WebContentsCreated(content::WebContents* source_contents,
                                      int opener_render_process_id,
                                      int opener_render_frame_id,
@@ -628,11 +642,16 @@ void WebContents::AddNewContents(
   v8::HandleScope handle_scope(isolate());
   auto api_web_contents =
       CreateAndTake(isolate(), std::move(new_contents), Type::BROWSER_WINDOW);
-  if (Emit("-add-new-contents", api_web_contents, disposition, user_gesture,
-           initial_rect.x(), initial_rect.y(), initial_rect.width(),
-           initial_rect.height(), tracker->url, tracker->frame_name)) {
-    // TODO(zcbenz): Can we make this sync?
-    api_web_contents->DestroyWebContents(true /* async */);
+
+  {
+    // DEPRECATED
+    // Will be removed in 9.0.0
+    if (Emit("-add-new-contents", api_web_contents, disposition, user_gesture,
+             initial_rect.x(), initial_rect.y(), initial_rect.width(),
+             initial_rect.height(), tracker->url, tracker->frame_name)) {
+      // TODO(zcbenz): Can we make this sync?
+      api_web_contents->DestroyWebContents(true /* async */);
+    }
   }
 }
 

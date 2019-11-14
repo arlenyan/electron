@@ -36,3 +36,30 @@ export function createLazyInstance (
   }
   return module
 }
+
+// Roughly an implementation of `_.merge()`
+export function deepMerge (
+  target: { [key: string]: any },
+  source: { [key: string]: any },
+  visited?: Set<any>
+) {
+  // Check for circular reference.
+  if (visited == null) visited = new Set()
+  if (visited.has(source)) return
+
+  visited.add(source)
+  for (const key in source) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) continue
+
+    const value = source[key]
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      target[key] = deepMerge(target[key] || {}, value, visited)
+    } else {
+      if (key in target) continue
+      target[key] = value
+    }
+  }
+  visited.delete(source)
+
+  return target
+}
