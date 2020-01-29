@@ -40,6 +40,10 @@ v8::Isolate* JavascriptEnvironment::Initialize(uv_loop_t* event_loop) {
 
   // --js-flags.
   std::string js_flags = cmd->GetSwitchValueASCII(switches::kJavaScriptFlags);
+  
+  // Always expose garbage collection.
+  js_flags.append(" --expose-gc");
+
   if (!js_flags.empty())
     v8::V8::SetFlagsFromString(js_flags.c_str(), js_flags.size());
 
